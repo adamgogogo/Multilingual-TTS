@@ -1,10 +1,9 @@
 import tempfile
 
-import requests
 import edge_tts
 import gradio as gr
-
-tashkil_url = "http://www.7koko.com/api/tashkil/index.php"
+from transformers import pipeline
+import pyarabic.araby as araby
 
 language_dict = {
   "English": {
@@ -443,20 +442,21 @@ language_dict = {
   }
 }
 
+pipe = pipeline("text2text-generation", model="mush42/fine-tashkeel")
+
 async def text_to_speech_edge(text, language_code, speaker, tashkeel_checkbox=False):
 
+  # Remove diacritics from Arabic text then add tashkeel
     if language_code == "Arabic" and tashkeel_checkbox:
-        data = {"textArabic": text}
-        response = requests.post(tashkil_url, data=data)
-        response.encoding = 'utf-8'
-        text = response.text.strip()
+      text = pipe(araby.strip_diacritics(text))[0]["generated_text"].strip()
+    
+    # Get the voice for the selected language and speaker
     voice = language_dict[language_code][speaker]
     communicate = edge_tts.Communicate(text, voice)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-        tmp_path = tmp_file.name
-        await communicate.save(tmp_path)
+      tmp_path = tmp_file.name
+      await communicate.save(tmp_path)
 
-    print(tmp_path)
     return text, tmp_path
 
 

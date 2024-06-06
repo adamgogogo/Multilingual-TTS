@@ -1,3 +1,4 @@
 gradio
 edge-tts
-requests
+transformers
+pyarabic
