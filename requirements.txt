@@ -1,4 +1,5 @@
 gradio
 edge-tts
+torch
 transformers
 pyarabic
